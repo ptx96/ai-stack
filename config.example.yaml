@@ -1,0 +1,17 @@
+# Copy to ./hermes-data/config.yaml before the first start; Hermes migrates it in place.
+providers:
+  unsloth:
+    api: http://unsloth-studio:8000/v1
+    key_env: UNSLOTH_API_KEY
+    transport: chat_completions
+
+model:
+  provider: custom:unsloth
+  # Must match an id from GET /v1/models while that model is loaded in Studio.
+  default: CHANGE_ME
+
+webapp:
+  enabled: true
+  host: 0.0.0.0
+  port: 9120
+  public_url: http://localhost:9120

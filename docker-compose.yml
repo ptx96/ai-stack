@@ -1,0 +1,79 @@
+name: unsloth
+
+services:
+  unsloth-studio:
+    image: ${UNSLOTH_IMAGE:-unsloth/unsloth-rocm}:${UNSLOTH_IMAGE_TAG:-studio}
+    container_name: unsloth-studio
+    restart: unless-stopped
+    devices:
+      - /dev/kfd
+      - /dev/dri
+    # Numeric host GIDs: group names inside the container may map to different IDs.
+    group_add:
+      - ${VIDEO_GID:?set VIDEO_GID in .env}
+      - ${RENDER_GID:?set RENDER_GID in .env}
+    ipc: host
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack: 67108864
+    ports:
+      - "${UNSLOTH_BIND:-127.0.0.1}:8000:8000"
+      - "${UNSLOTH_BIND:-127.0.0.1}:8888:8888"
+      - "${UNSLOTH_BIND:-127.0.0.1}:2222:22"
+    environment:
+      HSA_OVERRIDE_GFX_VERSION: ${HSA_OVERRIDE_GFX_VERSION:-11.0.0}
+      UNSLOTH_STUDIO_PASSWORD: ${UNSLOTH_STUDIO_PASSWORD:?set UNSLOTH_STUDIO_PASSWORD in .env}
+      JUPYTER_PASSWORD: ${JUPYTER_PASSWORD:?set JUPYTER_PASSWORD in .env}
+      SSH_KEY: ${SSH_KEY:-}
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      # Not the project root: Studio tools and Jupyter could read .env and hermes-data.
+      - ./workspace:/workspace/host
+      - ${HOME}/.cache/huggingface:/workspace/.cache/huggingface
+      - unsloth-studio:/opt/unsloth-studio
+
+  hermes:
+    image: nousresearch/hermes-agent:${HERMES_IMAGE_TAG:-stable}
+    container_name: hermes
+    restart: unless-stopped
+    command: gateway run
+    depends_on:
+      - unsloth-studio
+    shm_size: 1gb
+    ports:
+      - "${HERMES_BIND:-127.0.0.1}:8642:8642"
+      - "${HERMES_BIND:-127.0.0.1}:9119:9119"
+      - "${HERMES_BIND:-127.0.0.1}:9120:9120"
+    environment:
+      PUID: ${PUID:?set PUID in .env}
+      PGID: ${PGID:?set PGID in .env}
+      HERMES_DASHBOARD: "1"
+      HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${HERMES_DASHBOARD_USERNAME:-admin}
+      HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_PASSWORD:?set HERMES_DASHBOARD_PASSWORD in .env}
+      HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${HERMES_DASHBOARD_SECRET:?set HERMES_DASHBOARD_SECRET in .env}
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: ${API_SERVER_HOST:-127.0.0.1}
+      API_SERVER_KEY: ${API_SERVER_KEY:?set API_SERVER_KEY in .env}
+      UNSLOTH_API_KEY: ${UNSLOTH_API_KEY:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
+    volumes:
+      - ./hermes-data:/opt/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8642/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+          cpus: "2.0"
+
+volumes:
+  unsloth-studio:
+    external: true
+    name: unsloth-studio
