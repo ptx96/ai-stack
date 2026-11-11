@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+# Secrets come from the container environment; never inline them.
+# Env references are expanded everywhere, comments included, so do not write a dollar sign in comments.
+config:
+  database:
+    # Analytics and request logs; /data is the ./agentgateway/data bind mount.
+    url: sqlite:///data/data.db
+
+  session:
+    # AES-256 key for session tokens; generate with: openssl rand -hex 32
+    key: "$AGENTGATEWAY_SESSION_KEY"
+gateways:
+  # LLM / OpenAI-compatible traffic.
+  default:
+    port: 4000
+  # Admin UI on its own port so it can stay private while 4000 is shared.
+  ui-gateway:
+    port: 4001
+
+ui:
+  gateways: [ui-gateway]
+
+llm:
+  models:
+  # Client sends copilot/<model>, e.g. copilot/gpt-4.1; the prefix is stripped.
+  - name: "copilot/*"
+    provider: copilot
+    params:
+      apiKey: "$GH_COPILOT_TOKEN"
+    transformation:
+      model: llmRequest.model.stripPrefix("copilot/")
+
+  # Fallback for any other name. Studio serves one loaded model at a time, so the id is forwarded as is.
+  - name: "*"
+    provider:
+      custom:
+        formats:
+        - type: completions
+    params:
+      baseUrl: http://unsloth-studio:8000/v1
+      apiKey: "$UNSLOTH_API_KEY"
