@@ -50,6 +50,7 @@ services:
       PUID: ${PUID:?set PUID in .env}
       PGID: ${PGID:?set PGID in .env}
       HERMES_DASHBOARD: "1"
+      HERMES_WRITE_SAFE_ROOT: /opt/data:/tmp
       HERMES_DASHBOARD_BASIC_AUTH_USERNAME: ${HERMES_DASHBOARD_USERNAME:-admin}
       HERMES_DASHBOARD_BASIC_AUTH_PASSWORD: ${HERMES_DASHBOARD_PASSWORD:?set HERMES_DASHBOARD_PASSWORD in .env}
       HERMES_DASHBOARD_BASIC_AUTH_SECRET: ${HERMES_DASHBOARD_SECRET:?set HERMES_DASHBOARD_SECRET in .env}
@@ -72,6 +73,34 @@ services:
         limits:
           memory: 4g
           cpus: "2.0"
+
+  agentgateway:
+    image: cr.agentgateway.dev/agentgateway:${AGENTGATEWAY_IMAGE_TAG:-v1.7.0}
+    container_name: agentgateway
+    restart: unless-stopped
+    # Image is distroless (no shell), so no exec-based healthcheck is possible.
+    command: ["-f", "/config.yaml"]
+    user: "${PUID:?set PUID in .env}:${PGID:?set PGID in .env}"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      - "${AGENTGATEWAY_BIND:-127.0.0.1}:4000:4000"
+      - "${AGENTGATEWAY_BIND:-127.0.0.1}:4001:4001"
+    environment:
+      UNSLOTH_API_KEY: ${UNSLOTH_API_KEY:-}
+      GH_COPILOT_TOKEN: ${GH_COPILOT_TOKEN:-}
+      AGENTGATEWAY_SESSION_KEY: ${AGENTGATEWAY_SESSION_KEY:?set AGENTGATEWAY_SESSION_KEY in .env}
+    volumes:
+      - ./agentgateway/config.yaml:/config.yaml
+      - ./agentgateway/data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "1.0"
 
 volumes:
   unsloth-studio:
