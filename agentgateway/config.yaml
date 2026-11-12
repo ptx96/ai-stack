@@ -29,6 +29,10 @@ llm:
       apiKey: "$GH_COPILOT_TOKEN"
     transformation:
       model: llmRequest.model.stripPrefix("copilot/")
+    # VS Code sends x-onbehalf-extension-id; Copilot then rejects x-initiator agent with "extensions do not support agent mode".
+    requestTransformation:
+      remove:
+      - x-onbehalf-extension-id
 
   # Fallback for any other name. Studio serves one loaded model at a time, so the id is forwarded as is.
   - name: "*"
