@@ -41,6 +41,7 @@ services:
     command: gateway run
     depends_on:
       - unsloth-studio
+      - agentgateway
     shm_size: 1gb
     ports:
       - "${HERMES_BIND:-127.0.0.1}:8642:8642"
@@ -58,6 +59,7 @@ services:
       API_SERVER_HOST: ${API_SERVER_HOST:-127.0.0.1}
       API_SERVER_KEY: ${API_SERVER_KEY:?set API_SERVER_KEY in .env}
       UNSLOTH_API_KEY: ${UNSLOTH_API_KEY:-}
+      AGENTGATEWAY_VIRTUAL_KEY: ${AGENTGATEWAY_VIRTUAL_KEY:-}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_ALLOWED_USERS: ${TELEGRAM_ALLOWED_USERS:-}
     volumes:
@@ -93,6 +95,7 @@ services:
       UNSLOTH_API_KEY: ${UNSLOTH_API_KEY:-}
       GH_COPILOT_TOKEN: ${GH_COPILOT_TOKEN:-}
       AGENTGATEWAY_SESSION_KEY: ${AGENTGATEWAY_SESSION_KEY:?set AGENTGATEWAY_SESSION_KEY in .env}
+      AGENTGATEWAY_VIRTUAL_KEY: ${AGENTGATEWAY_VIRTUAL_KEY:?set AGENTGATEWAY_VIRTUAL_KEY in .env}
     volumes:
       - ./agentgateway/config.yaml:/config.yaml
       - ./agentgateway/data:/data

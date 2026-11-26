@@ -124,7 +124,7 @@ docker compose stop agentgateway           # stop
 docker compose up -d --force-recreate agentgateway   # apply .env, image tag or port changes
 ```
 
-Config edits to `agentgateway/config.yaml` (except the top-level `config:` block) are picked up without a restart. The file is mounted writable, so changes saved from the UI rewrite it; keep secrets in `.env` and reference them as environment variables. To point Hermes at the gateway, set the `unsloth` provider `api` in `hermes-data/config.yaml` to `http://agentgateway:4000/v1`.
+Config edits to `agentgateway/config.yaml` (except the top-level `config:` block) are picked up without a restart. The file is mounted writable, so changes saved from the UI rewrite it; keep secrets in `.env` and reference them as environment variables. Hermes reaches the gateway through the `agentgateway-hybrid-completions` (`chat_completions`) and `agentgateway-hybrid-responses` (`codex_responses`) providers in `hermes-data/config.yaml`, both at `http://agentgateway:4000/v1`. The `unsloth` provider still calls Studio directly.
 
 Test and troubleshoot:
 
