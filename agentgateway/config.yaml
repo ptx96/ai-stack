@@ -21,6 +21,14 @@ ui:
   gateways: [ui-gateway]
 
 llm:
+  policies:
+    apiKey:
+      mode: strict
+      keys:
+      # Clients send this key as Authorization: Bearer; the gateway strips it before forwarding.
+      - key: "$AGENTGATEWAY_VIRTUAL_KEY"
+        metadata:
+          user: ptx
   models:
   # Client sends copilot/<model>, e.g. copilot/gpt-4.1; the prefix is stripped.
   - name: "copilot/*"

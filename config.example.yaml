@@ -4,6 +4,14 @@ providers:
     api: http://unsloth-studio:8000/v1
     key_env: UNSLOTH_API_KEY
     transport: chat_completions
+  agentgateway-hybrid-completions:
+    api: http://agentgateway:4000/v1
+    key_env: AGENTGATEWAY_VIRTUAL_KEY
+    transport: chat_completions
+  agentgateway-hybrid-responses:
+    api: http://agentgateway:4000/v1
+    key_env: AGENTGATEWAY_VIRTUAL_KEY
+    transport: codex_responses
 
 model:
   provider: custom:unsloth
