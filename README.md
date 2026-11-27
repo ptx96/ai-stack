@@ -143,6 +143,21 @@ curl http://localhost:4000/v1/chat/completions -H 'Content-Type: application/jso
 - The image has no shell, so there is no container healthcheck. Use the readiness URL above (port `15021`, internal only).
 - The admin interface on `:15000` is loopback inside the container and is not published.
 
+## Generate the Copilot chat models
+
+`scripts/copilot/render_chat_models.py` builds `chatLanguageModels.json` (in the project root, written with mode `600`) from the models reported by agentgateway and Studio:
+
+- `copilot/*` models from `http://localhost:4000/v1/models`, split into "Gateway - Copilot (Completions)" and "Gateway - Copilot (Responses)" (`gpt-*` models use the Responses API).
+- Chat models from Studio at `http://localhost:8000/v1/models`, excluding non-chat tasks, as "Gateway - Local Unsloth (Completions)".
+
+The script needs `AGENTGATEWAY_VIRTUAL_KEY` (from `.env` or the environment) and, optionally, `UNSLOTH_API_KEY`. Run it with the stack up:
+
+```bash
+python3 scripts/copilot/render_chat_models.py
+```
+
+Options: `--gateway-url` (env `AGENTGATEWAY_API_URL`), `--unsloth-url` (env `UNSLOTH_API_URL`), `--output`, `--env-file`. If a service returns no models, the script exits with an error and leaves the existing output unchanged. The output contains the virtual key, so keep it out of version control.
+
 ## Update
 
 Set `HERMES_IMAGE_TAG` in `.env` for Hermes (and `AGENTGATEWAY_IMAGE_TAG` for agentgateway), then:
